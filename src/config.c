@@ -29,6 +29,8 @@
 
 static struct config* config = NULL;
 
+struct evdns_base* dns = NULL;
+
 int parse_config(char* config_file) {
   FILE* f = fopen(config_file, "r");
   if (!f) {

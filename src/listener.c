@@ -78,6 +78,7 @@ static void listener_callback(struct evconnlistener* listener, evutil_socket_t f
     event_base_loopbreak(base);
     return;
   }
-  bufferevent_setcb(bev, preproxy_readcb, NULL, proxy_eventcb, context);
+  struct proxy_connection* proxy = new_proxy(context, bev);
+  bufferevent_setcb(bev, preproxy_readcb, NULL, proxy_eventcb, proxy);
   bufferevent_enable(bev, EV_READ);
 };

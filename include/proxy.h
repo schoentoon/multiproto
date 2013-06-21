@@ -23,14 +23,22 @@
 struct proxy_connection {
   struct listener* listener;
   struct module* module;
+  struct bufferevent* client;
+  struct bufferevent* proxied_connection;
 };
 
-struct proxy_connection* new_proxy(struct listener* listener);
+struct proxy_connection* new_proxy(struct listener* listener, struct bufferevent* bev);
+
+void free_proxy_connection(struct proxy_connection* conn);
 
 void preproxy_readcb(struct bufferevent* bev, void* context);
 
 void proxy_readcb(struct bufferevent* bev, void* context);
 
 void proxy_eventcb(struct bufferevent* bev, short events, void* context);
+
+void proxied_conn_readcb(struct bufferevent* bev, void* context);
+
+void proxied_conn_eventcb(struct bufferevent* bev, short events, void* context);
 
 #endif //_PROXY_H

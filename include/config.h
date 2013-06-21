@@ -24,6 +24,8 @@
 #include <event2/listener.h>
 #include <event2/bufferevent.h>
 
+struct evdns_base* dns;
+
 struct config {
   struct listener* listeners;
 };

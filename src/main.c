@@ -25,6 +25,7 @@
 #include <getopt.h>
 
 #include <event2/event.h>
+#include <event2/dns.h>
 
 static const struct option options[] = {
   { "help",         no_argument,       0, 'h' },
@@ -77,6 +78,7 @@ int main(int argc, char** argv) {
     }
   }
   event_base = event_base_new();
+  dns = evdns_base_new(event_base, 1);
   if (dispatch_config(event_base))
     return 1;
   signal(SIGTERM, onSignal);
