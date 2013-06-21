@@ -17,6 +17,7 @@
 
 #include "listener.h"
 
+#include "proxy.h"
 #include "debug.h"
 
 #include <stdio.h>
@@ -57,7 +58,7 @@ static void listener_callback(struct evconnlistener* listener, evutil_socket_t f
                              ,struct sockaddr* sa, int socklen, void* context);
 
 int initListener(struct event_base* base, struct listener* listener) {
-  listener->listener = evconnlistener_new_bind(base, listener_callback, base
+  listener->listener = evconnlistener_new_bind(base, listener_callback, listener
                                               ,LEV_OPT_REUSEABLE|LEV_OPT_CLOSE_ON_FREE, -1
                                               ,(struct sockaddr*) listener->address, sizeof(struct sockaddr_in));
   if (!listener->listener) {
@@ -71,12 +72,12 @@ int initListener(struct event_base* base, struct listener* listener) {
 
 static void listener_callback(struct evconnlistener* listener, evutil_socket_t fd
                              ,struct sockaddr* sa, int socklen, void* context) {
-  struct event_base* base = context;
+  struct event_base* base = evconnlistener_get_base(listener);
   struct bufferevent* bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
   if (!bev) {
     event_base_loopbreak(base);
     return;
   }
-//  bufferevent_setcb(bev, client_readcb, NULL, client_eventcb, client);
+  bufferevent_setcb(bev, preproxy_readcb, NULL, proxy_eventcb, context);
   bufferevent_enable(bev, EV_READ);
 };

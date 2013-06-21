@@ -15,19 +15,22 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
+#ifndef _PROXY_H
+#define _PROXY_H
 
-int matchData(unsigned char* data, size_t length) {
-  char buf[65];
-  int major, minor;
-  if (sscanf((char*) data, "%64s / HTTP/%d.%d\r\n", buf, &major, &minor) == 3
-    || sscanf((char*) data, "%64s /%*s HTTP/%d.%d\r\n", buf, &major, &minor) == 3) {
-    if (major >= 1 && minor >= 1) {
-      if (strcmp(buf, "GET") == 0)
-        return 1;
-    }
-  }
-  return 0;
-}
+#include "listener.h"
+
+struct proxy_connection {
+  struct listener* listener;
+  struct module* module;
+};
+
+struct proxy_connection* new_proxy(struct listener* listener);
+
+void preproxy_readcb(struct bufferevent* bev, void* context);
+
+void proxy_readcb(struct bufferevent* bev, void* context);
+
+void proxy_eventcb(struct bufferevent* bev, short events, void* context);
+
+#endif //_PROXY_H

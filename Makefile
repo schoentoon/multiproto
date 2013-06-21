@@ -4,7 +4,7 @@ LFLAGS := -levent -ldl -Wl,--export-dynamic
 DEFINES:= ${DEFINES}
 CC     := gcc
 BINARY := multiproto
-DEPS   := build/main.o build/debug.o build/config.o build/listener.o build/module.o
+DEPS   := build/main.o build/debug.o build/config.o build/listener.o build/module.o build/proxy.o
 
 .PHONY: all clean modules
 
@@ -27,6 +27,9 @@ build/listener.o: src/listener.c include/listener.h
 
 build/module.o: src/module.c include/module.h
 	$(CC) $(CFLAGS) $(DEFINES) $(INC) -c -o build/module.o src/module.c
+
+build/proxy.o: src/proxy.c include/proxy.h
+	$(CC) $(CFLAGS) $(DEFINES) $(INC) -c -o build/proxy.o src/proxy.c
 
 bin/$(BINARY): $(DEPS)
 	$(CC) $(CFLAGS) $(DEFINES) $(INC) -o bin/$(BINARY) $(DEPS) $(LFLAGS)
