@@ -32,8 +32,13 @@ struct proxy_connection* new_proxy(struct listener* listener, struct bufferevent
 }
 
 void free_proxy_connection(struct proxy_connection* conn) {
-  if (conn)
+  if (conn) {
+    if (conn->client)
+      bufferevent_free(conn->client);
+    if (conn->proxied_connection)
+      bufferevent_free(conn->proxied_connection);
     free(conn);
+  }
 }
 
 void preproxy_readcb(struct bufferevent* bev, void* context) {
@@ -47,15 +52,15 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
     struct module* m = listener->modules;
     while (m) {
       if (m->matcher(buffer, length)) {
-        DEBUG(255, "I should be connecting to port %s:%hd now.", m->address, m->port);
+        DEBUG(255, "Connecting to port %s:%hd now.", m->address, m->port);
         struct event_base* base = bufferevent_get_base(bev);
         proxy->proxied_connection = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
         struct timeval timeout = {10, 0};
         bufferevent_set_timeouts(proxy->proxied_connection, &timeout, NULL);
         bufferevent_socket_connect_hostname(proxy->proxied_connection, dns, AF_INET, m->address, m->port);
-        bufferevent_setcb(proxy->proxied_connection, proxied_conn_readcb, NULL, proxied_conn_eventcb, proxy);
+        bufferevent_setcb(proxy->proxied_connection, proxied_conn_readcb, NULL, free_on_disconnect_eventcb, proxy);
         bufferevent_enable(proxy->proxied_connection, EV_READ);
-        bufferevent_setcb(bev, proxy_readcb, NULL, proxy_eventcb, proxy);
+        bufferevent_setcb(bev, proxy_readcb, NULL, free_on_disconnect_eventcb, proxy);
         struct evbuffer* proxied_output = bufferevent_get_output(proxy->proxied_connection);
         bufferevent_read_buffer(bev, proxied_output);
         break;
@@ -71,14 +76,15 @@ void proxy_readcb(struct bufferevent* bev, void* context) {
   bufferevent_read_buffer(bev, proxied_output);
 }
 
-void proxy_eventcb(struct bufferevent* bev, short events, void* context) {
+void free_on_disconnect_eventcb(struct bufferevent* bev, short events, void* context) {
+  if (!(events & BEV_EVENT_CONNECTED)) {
+    struct proxy_connection* proxy = context;
+    free_proxy_connection(proxy);
+  }
 }
 
 void proxied_conn_readcb(struct bufferevent* bev, void* context) {
   struct proxy_connection* proxy = context;
   struct evbuffer* client_output = bufferevent_get_output(proxy->client);
   bufferevent_read_buffer(bev, client_output);
-}
-
-void proxied_conn_eventcb(struct bufferevent* bev, short events, void* context) {
 }

@@ -35,10 +35,8 @@ void preproxy_readcb(struct bufferevent* bev, void* context);
 
 void proxy_readcb(struct bufferevent* bev, void* context);
 
-void proxy_eventcb(struct bufferevent* bev, short events, void* context);
+void free_on_disconnect_eventcb(struct bufferevent* bev, short events, void* context);
 
 void proxied_conn_readcb(struct bufferevent* bev, void* context);
-
-void proxied_conn_eventcb(struct bufferevent* bev, short events, void* context);
 
 #endif //_PROXY_H
