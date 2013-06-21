@@ -30,7 +30,7 @@ struct module {
   void* handle;
   void* context;
   mod_match_function* matcher;
-  struct sockaddr* address;
+  char* address;
   uint16_t port;
   struct module* next;
 };

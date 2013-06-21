@@ -74,19 +74,11 @@ int parse_config(char* config_file) {
           }
         }
       } else if (listener && module && !module->address && strcmp(key, "address") == 0) {
-        module->address = malloc(sizeof(struct sockaddr));
-        if (module->address) {
-          memset(module->address, 0, sizeof(struct sockaddr));
-          char ip[BUFSIZ];
-          uint16_t port;
-          if (sscanf(value, "%[0-9.]:%hd", ip, &port) == 2) {
-            module->address->sa_family = AF_INET;
-            module->port = port;
-            inet_pton(AF_INET, ip, &module->address->sa_data);
-          } else {
-            free(module->address);
-            module->address = NULL;
-          }
+        char address[129];
+        uint16_t port;
+        if (sscanf(value, "%128[^:]:%hd", address, &port) == 2) {
+          module->address = strdup(address);
+          module->port = port;
         }
       }
     } else {

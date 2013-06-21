@@ -39,7 +39,7 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
     struct module* m = listener->modules;
     while (m) {
       if (m->matcher(buffer, length)) {
-        DEBUG(255, "I should be connecting to port %hd now.", m->port);
+        DEBUG(255, "I should be connecting to port %s:%hd now.", m->address, m->port);
         break;
       }
       m = m->next;
