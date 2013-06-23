@@ -24,8 +24,16 @@ int matchData(unsigned char* data, size_t length) {
   int major, minor;
   if (sscanf((char*) data, "%64s / HTTP/%d.%d\r\n", buf, &major, &minor) == 3
     || sscanf((char*) data, "%64s /%*s HTTP/%d.%d\r\n", buf, &major, &minor) == 3) {
-    if (major >= 1 && minor >= 1) {
-      if (strcmp(buf, "GET") == 0 || strcmp(buf, "POST") == 0 || strcmp(buf, "PUT") == 0 || strcmp(buf, "DELETE") == 0 || strcmp(buf, "PATCH") == 0 || strcmp(buf, "HEAD") == 0 || strcmp(buf, "CONNECT") == 0 || strcmp(buf, "TRACE") == 0 || strcmp(buf, "OPTIONS") == 0)
+    if (major >= 1 && minor >= 0) {
+      if (strcmp(buf, "GET") == 0
+        || strcmp(buf, "POST") == 0
+        || strcmp(buf, "PUT") == 0
+        || strcmp(buf, "DELETE") == 0
+        || strcmp(buf, "PATCH") == 0
+        || strcmp(buf, "HEAD") == 0
+        || strcmp(buf, "CONNECT") == 0
+        || strcmp(buf, "TRACE") == 0
+        || strcmp(buf, "OPTIONS") == 0)
         return 1;
     }
   }
