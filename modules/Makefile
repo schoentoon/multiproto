@@ -3,7 +3,7 @@ INC    := -I../include ${INC}
 LFLAGS := -shared -fPIE
 DEFINES:= ${DEFINES}
 CC     := ${CC}
-MODULES:= http.so irc.so smtp.so
+MODULES:= http.so irc.so smtp.so minecraft.so
 
 .PHONY: all clean
 
@@ -17,6 +17,9 @@ irc.so: src/irc.c
 
 smtp.so: src/smtp.c
 	$(CC) $(CFLAGS) $(DEFINES) $(INC) $(LFLAGS) -o smtp.so src/smtp.c
+
+minecraft.so: src/minecraft.c
+	$(CC) $(CFLAGS) $(DEFINES) $(INC) $(LFLAGS) -o minecraft.so src/minecraft.c
 
 clean:
 	rm -rfv *.so
