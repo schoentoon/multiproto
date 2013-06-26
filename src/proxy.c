@@ -32,13 +32,14 @@ struct proxy_connection* new_proxy(struct listener* listener, struct bufferevent
 }
 
 void free_proxy_connection(struct proxy_connection* conn) {
-  if (conn) {
-    if (conn->client)
-      bufferevent_free(conn->client);
-    if (conn->proxied_connection)
-      bufferevent_free(conn->proxied_connection);
+  if (conn)
     free(conn);
-  }
+}
+
+void disconnect_after_write(struct bufferevent* bev, void* context) {
+  struct evbuffer* output = bufferevent_get_output(bev);
+  if (evbuffer_get_length(output) == 0)
+    bufferevent_free(bev);
 }
 
 void preproxy_readcb(struct bufferevent* bev, void* context) {
@@ -78,8 +79,21 @@ void proxy_readcb(struct bufferevent* bev, void* context) {
 
 void free_on_disconnect_eventcb(struct bufferevent* bev, short events, void* context) {
   if (!(events & BEV_EVENT_CONNECTED)) {
-    struct proxy_connection* proxy = context;
-    free_proxy_connection(proxy);
+    if (context) {
+      struct proxy_connection* proxy = context;
+      struct bufferevent* to_disconnect_later = NULL;
+      if (proxy->client == bev)
+        to_disconnect_later = proxy->proxied_connection;
+      else if (proxy->proxied_connection == bev)
+        to_disconnect_later = proxy->client;
+      bufferevent_free(bev);
+      free_proxy_connection(proxy);
+      if (to_disconnect_later) {
+        bufferevent_setcb(to_disconnect_later, NULL, disconnect_after_write, free_on_disconnect_eventcb, NULL);
+        bufferevent_enable(to_disconnect_later, EV_WRITE);
+      }
+    } else
+      bufferevent_free(bev);
   }
 }
 
