@@ -89,8 +89,13 @@ void free_on_disconnect_eventcb(struct bufferevent* bev, short events, void* con
       bufferevent_free(bev);
       free_proxy_connection(proxy);
       if (to_disconnect_later) {
-        bufferevent_setcb(to_disconnect_later, NULL, disconnect_after_write, free_on_disconnect_eventcb, NULL);
-        bufferevent_enable(to_disconnect_later, EV_WRITE);
+        struct evbuffer* output = bufferevent_get_output(to_disconnect_later);
+        if (evbuffer_get_length(output) == 0)
+          bufferevent_free(to_disconnect_later);
+        else {
+          bufferevent_setcb(to_disconnect_later, NULL, disconnect_after_write, free_on_disconnect_eventcb, NULL);
+          bufferevent_enable(to_disconnect_later, EV_WRITE);
+        }
       }
     } else
       bufferevent_free(bev);
