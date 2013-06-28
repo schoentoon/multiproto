@@ -1,6 +1,6 @@
 CFLAGS := -Wall -O2 -mtune=native -g ${CFLAGS}
 INC    := -I../include ${INC}
-LFLAGS := -shared -fPIE
+LFLAGS := -shared -fPIC
 DEFINES:= ${DEFINES}
 CC     := ${CC}
 MODULES:= http.so irc.so smtp.so minecraft.so git.so
