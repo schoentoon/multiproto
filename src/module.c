@@ -36,17 +36,10 @@ struct module* new_module(char* filename) {
     dlclose(handle);
     return NULL;
   }
-  mod_log_function* logger = dlsym(handle, "logData");
-  if (!logger) {
-    fprintf(stderr, "ERROR: %s doesn't have the function log()\n%s\n", filename, dlerror());
-    dlclose(handle);
-    return NULL;
-  }
   struct module* module = malloc(sizeof(struct module));
   memset(module, 0, sizeof(struct module));
   module->handle = handle;
   module->matcher = matcher;
-  module->log_function = logger;
   mod_create_context* create_context = dlsym(handle, "createContext");
   if (create_context) {
     module->context = create_context();

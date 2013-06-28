@@ -26,7 +26,7 @@
 typedef void* mod_create_context();
 typedef void mod_free_context(void* context);
 typedef int mod_match_function(unsigned char* data, size_t length);
-typedef int mod_log_function(char* format, unsigned char* data, size_t length, char* buf, size_t buflen);
+typedef size_t mod_log_function(unsigned char* data, size_t length, char* buf, size_t buflen);
 
 struct module {
   void* handle;
@@ -35,7 +35,6 @@ struct module {
   char* address;
   char* logfile;
   char* logformat;
-  mod_log_function* log_function;
   uint16_t port;
   struct module* next;
 };

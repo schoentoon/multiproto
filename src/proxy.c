@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
+#include <dlfcn.h>
 
 struct proxy_connection* new_proxy(struct listener* listener, struct bufferevent* bev) {
   struct proxy_connection* output = malloc(sizeof(struct proxy_connection));
@@ -43,6 +44,8 @@ void disconnect_after_write(struct bufferevent* bev, void* context) {
     bufferevent_free(bev);
 }
 
+size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char* data, size_t length);
+
 void preproxy_readcb(struct bufferevent* bev, void* context) {
   struct proxy_connection* proxy = context;
   struct listener* listener = proxy->listener;
@@ -55,7 +58,7 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
     while (m) {
       if (m->matcher(buffer, length)) {
         DEBUG(255, "Connecting to port %s:%hd now.", m->address, m->port);
-        if (m->logfile && m->log_function && m->logformat) {
+        if (m->logfile && m->logformat) {
           FILE* f = NULL;
           if (m->logfile == STDERR)
             f = stderr;
@@ -63,7 +66,7 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
             f = fopen(m->logfile, "a");
           char buf[BUFSIZ];
           bzero(buf, sizeof(buf));
-          size_t len = m->log_function(m->logformat, buffer, length, buf, sizeof(buf));
+          size_t len = build_log(m, buf, sizeof(buf), buffer, length);
           fwrite(buf, len, sizeof(char), f);
           fwrite("\n", 1, sizeof(char), f);
           fflush(f);
@@ -122,4 +125,34 @@ void proxied_conn_readcb(struct bufferevent* bev, void* context) {
   struct proxy_connection* proxy = context;
   struct evbuffer* client_output = bufferevent_get_output(proxy->client);
   bufferevent_read_buffer(bev, client_output);
+}
+
+size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char* data, size_t length) {
+  DEBUG(255, "build_log(%p, %p, %ud);", module, buf, buflen);
+  char* s = buf;
+  char* fmt = module->logformat;
+  for (;*fmt != '\0'; fmt++) {
+    if (*fmt == '%') {
+      fmt++;
+      char key[33];
+      if (sscanf(fmt, "%32[a-z]", key) == 1) {
+        char funcname[37];
+        if (snprintf(funcname, sizeof(funcname), "log_%s", key)) {
+          mod_log_function* key_func = dlsym(module->handle, funcname);
+          if (key_func) {
+            char valuebuf[1025];
+            if (key_func(data, length, valuebuf, sizeof(valuebuf) - 1)) {
+              DEBUG(255, "value: %s", valuebuf);
+              char *p = valuebuf;
+              while (*p)
+                *buf++ = *p++;
+            }
+          }
+        }
+        fmt += strlen(key) - 1;
+      }
+    } else
+      *buf++ = *fmt;
+  }
+  return buf - s;
 }

@@ -40,41 +40,14 @@ int matchData(unsigned char* data, size_t length) {
   return 0;
 }
 
-unsigned char startsWith(char* str, char* start) {
-  size_t str_len = strlen(str);
-  size_t start_len = strlen(start);
-  size_t lowest = (str_len < start_len) ? str_len : start_len;
-  int i;
-  for (i = 0; i < lowest; i++) {
-    if (str[i] != start[i])
-      return 0;
-  };
-  return 1;
-};
+size_t log_request(unsigned char* data, size_t length, char* buf, size_t buflen) {
+  if (sscanf((char*) data, "%64s", buf) == 1)
+    return strlen(buf);
+  return 0;
+}
 
-int logData(char* format, unsigned char* data, size_t length, char* buf, size_t buflen) {
-  char reqbuf[65];
-  char request[1025];
-  if (sscanf((char*) data, "%64s %1024[^ ] HTTP/", reqbuf, request) == 2) {
-    char* s = buf;
-    for (;*format != '\0'; format++) {
-      if (*format == '%') {
-        format++;
-        if (startsWith(format, "request")) {
-          format += 6;
-          char* c = reqbuf;
-          while (*c != '\0')
-            *buf++ = *c++;
-        } else if (startsWith(format, "page")) {
-          format += 3;
-          char* c = request;
-          while (*c != '\0')
-            *buf++ = *c++;
-        }
-      } else
-        *buf++ = *format;
-    }
-    return buf - s;
-  }
+size_t log_page(unsigned char* data, size_t length, char* buf, size_t buflen) {
+  if (sscanf((char*) data, "%*s %1024s", buf) == 1)
+    return strlen(buf);
   return 0;
 }
