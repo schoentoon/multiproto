@@ -24,6 +24,8 @@
 #include <event2/listener.h>
 #include <event2/bufferevent.h>
 
+#define STDERR (char*) stderr
+
 struct evdns_base* dns;
 
 struct config {

@@ -19,18 +19,23 @@
 #define _MODULE_H
 
 #include <time.h>
+#include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
 
 typedef void* mod_create_context();
 typedef void mod_free_context(void* context);
 typedef int mod_match_function(unsigned char* data, size_t length);
+typedef int mod_log_function(char* format, unsigned char* data, size_t length, char* buf, size_t buflen);
 
 struct module {
   void* handle;
   void* context;
   mod_match_function* matcher;
   char* address;
+  char* logfile;
+  char* logformat;
+  mod_log_function* log_function;
   uint16_t port;
   struct module* next;
 };

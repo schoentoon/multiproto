@@ -82,9 +82,21 @@ int parse_config(char* config_file) {
           module->address = strdup(address);
           module->port = port;
         }
-      }
+      } else if (listener && module && !module->logfile && strcmp(key, "logfile") == 0) {
+        if (strcmp(value, "stderr") == 0)
+          module->logfile = STDERR;
+        else {
+          FILE* f = fopen(value, "a");
+          if (f) {
+            module->logfile = strdup(value);
+            fclose(f);
+          } else
+            fprintf(stderr, "ERROR: %s\n", strerror(errno));
+        }
+      } else if (listener && module && !module->logformat && strcmp(key, "logformat") == 0)
+        module->logformat = strdup(value);
     } else {
-      fprintf(stderr, "Error on line %zd\tCould not be parsed correctly.\n", line_count);
+      fprintf(stderr, "Error on line %ud\tCould not be parsed correctly.\n", line_count);
       return 1;
     }
   };

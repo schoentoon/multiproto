@@ -18,6 +18,7 @@
 #include "proxy.h"
 
 #include "debug.h"
+#include "config.h"
 
 #include <stdlib.h>
 #include <event2/buffer.h>
@@ -54,6 +55,21 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
     while (m) {
       if (m->matcher(buffer, length)) {
         DEBUG(255, "Connecting to port %s:%hd now.", m->address, m->port);
+        if (m->logfile && m->log_function && m->logformat) {
+          FILE* f = NULL;
+          if (m->logfile == STDERR)
+            f = stderr;
+          else
+            f = fopen(m->logfile, "a");
+          char buf[BUFSIZ];
+          bzero(buf, sizeof(buf));
+          size_t len = m->log_function(m->logformat, buffer, length, buf, sizeof(buf));
+          fwrite(buf, len, sizeof(char), f);
+          fwrite("\n", 1, sizeof(char), f);
+          fflush(f);
+          if (m->logfile != STDERR)
+            fclose(f);
+        }
         struct event_base* base = bufferevent_get_base(bev);
         proxy->proxied_connection = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
         struct timeval timeout = {10, 0};
