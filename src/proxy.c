@@ -64,14 +64,16 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
             f = stderr;
           else
             f = fopen(m->logfile, "a");
-          char buf[BUFSIZ];
-          bzero(buf, sizeof(buf));
-          size_t len = build_log(m, buf, sizeof(buf), buffer, length);
-          fwrite(buf, len, sizeof(char), f);
-          fwrite("\n", 1, sizeof(char), f);
-          fflush(f);
-          if (m->logfile != STDERR)
-            fclose(f);
+          if (f) {
+            char buf[BUFSIZ];
+            bzero(buf, sizeof(buf));
+            size_t len = build_log(m, buf, sizeof(buf), buffer, length);
+            fwrite(buf, len, sizeof(char), f);
+            fwrite("\n", 1, sizeof(char), f);
+            fflush(f);
+            if (m->logfile != STDERR)
+              fclose(f);
+          }
         }
         struct event_base* base = bufferevent_get_base(bev);
         proxy->proxied_connection = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
