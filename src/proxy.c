@@ -130,8 +130,9 @@ void proxied_conn_readcb(struct bufferevent* bev, void* context) {
 size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char* data, size_t length) {
   DEBUG(255, "build_log(%p, %p, %ud);", module, buf, buflen);
   char* s = buf;
-  char* fmt = module->logformat;
-  for (;*fmt != '\0'; fmt++) {
+  char* end = s + buflen;
+  char* fmt;
+  for (fmt = module->logformat;*fmt != '\0'; fmt++) {
     if (*fmt == '%') {
       fmt++;
       char key[33];
@@ -144,15 +145,17 @@ size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char*
             if (key_func(data, length, valuebuf, sizeof(valuebuf) - 1)) {
               DEBUG(255, "value: %s", valuebuf);
               char *p = valuebuf;
-              while (*p)
+              while (*p && buf < end)
                 *buf++ = *p++;
             }
           }
         }
         fmt += strlen(key) - 1;
       }
-    } else
+    } else if (buf < end)
       *buf++ = *fmt;
+    else
+      break;
   }
   return buf - s;
 }
