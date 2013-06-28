@@ -26,7 +26,12 @@
 00000000  02 3d 00 0a 00 73 00 63  00 68 00 6f 00 65 00 6e .=...s.c .h.o.e.n
 00000010  00 74 00 6f 00 6f 00 6e  00 1d 00 31 00 39 00 32 .t.o.o.n ...1.9.2
 00000020  00 2e 00 31 00 36 00 38  00 2e 00 32 00 2e 00 32 ...1.6.8 ...2...2
-00000030  00 30 00 30 00 00 63 dd                          .0.0..c. 
+00000030  00 30 00 30 00 00 63 dd                          .0.0..c.
+
+00000000  02 3d 00 0a 00 73 00 63  00 68 00 6f 00 65 00 6e .=...s.c .h.o.e.n
+00000010  00 74 00 6f 00 6f 00 6e  00 0d 00 31 00 39 00 32 .t.o.o.n ...1.9.2
+00000020  00 2e 00 31 00 36 00 38  00 2e 00 32 00 2e 00 32 ...1.6.8 ...2...2
+00000030  00 30 00 30 00 00 5b a0                          .0.0..[.
  * In which schoentoon is the username and 192.168.2.200 is the ip address of
  * the server.
  */
@@ -45,11 +50,24 @@ int matchData(unsigned char* data, size_t length) {
             return 0;
         } else if (data[i] != 0x00)
           return 0;
-        else if (data[i] == 0x00 && data[i+1] == 0x1d)
+        else if (data[i] == 0x00 && (data[i+1] == 0x1d || data[i+1] == 0x0d))
           break;
       }
       return 1;
     }
   }
   return 0;
+}
+
+size_t log_username(unsigned char* data, size_t length, char* buf, size_t buflen) {
+  size_t len = 0;
+  size_t i;
+  for (i = 5; i < length; i+=2) {
+    if (isalnum(data[i]))
+      buf[len++] = (char) data[i];
+    else
+      break;
+  }
+  buf[len] = '\0';
+  return len;
 }
