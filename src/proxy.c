@@ -44,7 +44,7 @@ void disconnect_after_write(struct bufferevent* bev, void* context) {
     bufferevent_free(bev);
 }
 
-size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char* data, size_t length);
+size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char* data, size_t length, struct proxy_connection* proxy);
 
 void preproxy_readcb(struct bufferevent* bev, void* context) {
   struct proxy_connection* proxy = context;
@@ -67,7 +67,7 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
           if (f) {
             char buf[BUFSIZ];
             bzero(buf, sizeof(buf));
-            size_t len = build_log(m, buf, sizeof(buf), buffer, length);
+            size_t len = build_log(m, buf, sizeof(buf), buffer, length, proxy);
             fwrite(buf, len, sizeof(char), f);
             fwrite("\n", 1, sizeof(char), f);
             fflush(f);
@@ -129,7 +129,7 @@ void proxied_conn_readcb(struct bufferevent* bev, void* context) {
   bufferevent_read_buffer(bev, client_output);
 }
 
-size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char* data, size_t length) {
+size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char* data, size_t length, struct proxy_connection* proxy) {
   char* s = buf;
   char* end = s + buflen;
   if (config->dateformat) {
@@ -146,15 +146,21 @@ size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char*
       fmt++;
       char key[33];
       if (sscanf(fmt, "%32[a-z]", key) == 1) {
-        char funcname[37];
-        if (snprintf(funcname, sizeof(funcname), "log_%s", key)) {
-          mod_log_function* key_func = dlsym(module->handle, funcname);
-          if (key_func) {
-            char valuebuf[1025];
-            if (key_func(data, length, valuebuf, sizeof(valuebuf) - 1)) {
-              char *p = valuebuf;
-              while (*p && buf < end)
-                *buf++ = *p++;
+        if (strcmp(key, "ip") == 0) {
+          char *i = proxy->client_ip;
+          while (*i && buf < end)
+            *buf++ = *i++;
+        } else {
+          char funcname[37];
+          if (snprintf(funcname, sizeof(funcname), "log_%s", key)) {
+            mod_log_function* key_func = dlsym(module->handle, funcname);
+            if (key_func) {
+              char valuebuf[1025];
+              if (key_func(data, length, valuebuf, sizeof(valuebuf) - 1)) {
+                char *p = valuebuf;
+                while (*p && buf < end)
+                  *buf++ = *p++;
+              }
             }
           }
         }

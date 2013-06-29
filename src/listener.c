@@ -79,6 +79,7 @@ static void listener_callback(struct evconnlistener* listener, evutil_socket_t f
     return;
   }
   struct proxy_connection* proxy = new_proxy(context, bev);
+  inet_ntop(AF_INET, &((struct sockaddr_in*) sa)->sin_addr, proxy->client_ip, sizeof(proxy->client_ip));
   bufferevent_setcb(bev, preproxy_readcb, NULL, free_on_disconnect_eventcb, proxy);
   bufferevent_enable(bev, EV_READ);
 };
