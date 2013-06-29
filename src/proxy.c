@@ -67,10 +67,10 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
           if (f) {
             char buf[BUFSIZ];
             bzero(buf, sizeof(buf));
-            size_t len = build_log(m, buf, sizeof(buf), buffer, length, proxy);
-            fwrite(buf, len, sizeof(char), f);
-            fwrite("\n", 1, sizeof(char), f);
-            fflush(f);
+            if (build_log(m, buf, sizeof(buf), buffer, length, proxy) > 0) {
+              fprintf(f, "%s\n", buf);
+              fflush(f);
+            }
             if (m->logfile != STDERR)
               fclose(f);
           }
@@ -138,7 +138,7 @@ size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char*
     nowtm = localtime(&now);
     strftime(buf, end - s, config->dateformat, nowtm);
     while (*buf++);
-    *buf++ = ' ';
+    *(buf-1) = ' ';
   }
   char* fmt;
   for (fmt = module->logformat;*fmt != '\0'; fmt++) {
