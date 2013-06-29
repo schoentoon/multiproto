@@ -30,7 +30,10 @@ struct evdns_base* dns;
 
 struct config {
   struct listener* listeners;
+  char* dateformat;
 };
+
+struct config* config;
 
 int parse_config(char* config_file);
 

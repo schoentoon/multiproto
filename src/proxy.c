@@ -132,6 +132,14 @@ void proxied_conn_readcb(struct bufferevent* bev, void* context) {
 size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char* data, size_t length) {
   char* s = buf;
   char* end = s + buflen;
+  if (config->dateformat) {
+    struct tm *nowtm;
+    time_t now = time(NULL);
+    nowtm = localtime(&now);
+    strftime(buf, end - s, config->dateformat, nowtm);
+    while (*buf++);
+    *buf++ = ' ';
+  }
   char* fmt;
   for (fmt = module->logformat;*fmt != '\0'; fmt++) {
     if (*fmt == '%') {

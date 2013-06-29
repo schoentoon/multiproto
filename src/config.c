@@ -27,7 +27,7 @@
 
 #include <event2/bufferevent.h>
 
-static struct config* config = NULL;
+struct config* config = NULL;
 
 struct evdns_base* dns = NULL;
 
@@ -39,18 +39,20 @@ int parse_config(char* config_file) {
   }
   char line_buffer[BUFSIZ];
   config = malloc(sizeof(struct config));
-  memset(config, 0, sizeof(struct config));
+  bzero(config, sizeof(struct config));
   struct listener* listener = NULL;
   struct module* module = NULL;
   unsigned int line_count = 0;
   while (fgets(line_buffer, sizeof(line_buffer), f)) {
     line_count++;
-    if (strlen(line_buffer) == 1 || line_buffer[0] == '#')
+    if (strlen(line_buffer) <= 1 || line_buffer[0] == '#')
       continue;
     char key[BUFSIZ];
     char value[BUFSIZ];
     if (sscanf(line_buffer, "%[a-z_] = %[^\t\n]", key, value) == 2) {
-      if (strcmp(key, "listener") == 0) {
+      if (!config->dateformat && strcmp(key, "dateformat") == 0)
+        config->dateformat = strdup(value);
+      else if (strcmp(key, "listener") == 0) {
         listener = new_listener(value);
         module = NULL;
         if (listener) {
