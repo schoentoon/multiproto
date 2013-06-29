@@ -152,7 +152,7 @@ size_t build_log(struct module* module, char* buf, size_t buflen, unsigned char*
             *buf++ = *i++;
         } else {
           char funcname[37];
-          if (snprintf(funcname, sizeof(funcname), "log_%s", key)) {
+          if (snprintf(funcname, sizeof(funcname), "log_%s", key) > 0) {
             mod_log_function* key_func = dlsym(module->handle, funcname);
             if (key_func) {
               char valuebuf[1025];
