@@ -64,7 +64,7 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
             char buf[BUFSIZ];
             bzero(buf, sizeof(buf));
             if (build_log(m, buf, sizeof(buf), buffer, length, proxy) > 0)
-              syslog(LOG_INFO, "%s\n", buf);
+              syslog(LOG_INFO, "%s", buf);
           } else {
             FILE* f = NULL;
             if (m->logfile == STDERR)
