@@ -20,10 +20,11 @@
 #include "debug.h"
 #include "config.h"
 
+#include <dlfcn.h>
 #include <stdlib.h>
+#include <syslog.h>
 #include <event2/buffer.h>
 #include <event2/bufferevent.h>
-#include <dlfcn.h>
 
 struct proxy_connection* new_proxy(struct listener* listener, struct bufferevent* bev) {
   struct proxy_connection* output = malloc(sizeof(struct proxy_connection));
@@ -59,20 +60,27 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
       if (m->matcher(buffer, length)) {
         DEBUG(255, "Connecting to port %s:%hd now.", m->address, m->port);
         if (m->logfile && m->logformat) {
-          FILE* f = NULL;
-          if (m->logfile == STDERR)
-            f = stderr;
-          else
-            f = fopen(m->logfile, "a");
-          if (f) {
+          if (m->logfile == SYSLOG) {
             char buf[BUFSIZ];
             bzero(buf, sizeof(buf));
-            if (build_log(m, buf, sizeof(buf), buffer, length, proxy) > 0) {
-              fprintf(f, "%s\n", buf);
-              fflush(f);
+            if (build_log(m, buf, sizeof(buf), buffer, length, proxy) > 0)
+              syslog(LOG_INFO, "%s\n", buf);
+          } else {
+            FILE* f = NULL;
+            if (m->logfile == STDERR)
+              f = stderr;
+            else
+              f = fopen(m->logfile, "a");
+            if (f) {
+              char buf[BUFSIZ];
+              bzero(buf, sizeof(buf));
+              if (build_log(m, buf, sizeof(buf), buffer, length, proxy) > 0) {
+                fprintf(f, "%s\n", buf);
+                fflush(f);
+              }
+              if (m->logfile != STDERR)
+                fclose(f);
             }
-            if (m->logfile != STDERR)
-              fclose(f);
           }
         }
         struct event_base* base = bufferevent_get_base(bev);

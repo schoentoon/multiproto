@@ -26,6 +26,8 @@
 
 #define STDERR (char*) stderr
 
+static char* SYSLOG = "syslog";
+
 struct evdns_base* dns;
 
 struct config {
