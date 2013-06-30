@@ -99,6 +99,10 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
       }
       m = m->next;
     }
+    if (proxy->proxied_connection == NULL && length >= config->disconnect_after_bytes) {
+      DEBUG(255, "Disconnected client %p because he sent more than %u bytes without being finger printed.", bev, config->disconnect_after_bytes);
+      free_on_disconnect_eventcb(bev, BEV_FINISHED, context);
+    }
   }
 }
 

@@ -50,7 +50,12 @@ int parse_config(char* config_file) {
     char key[BUFSIZ];
     char value[BUFSIZ];
     if (sscanf(line_buffer, "%[a-z_] = %[^\t\n]", key, value) == 2) {
-      if (!config->dateformat && strcmp(key, "dateformat") == 0)
+      if (config->disconnect_after_bytes == 0 && strcmp(key, "disconnect_after_bytes") == 0) {
+        errno = 0;
+        unsigned short tmp = strtol(value, NULL, 10);
+        if (errno == 0)
+          config->disconnect_after_bytes = tmp;
+      } else if (!config->dateformat && strcmp(key, "dateformat") == 0)
         config->dateformat = strdup(value);
       else if (strcmp(key, "listener") == 0) {
         listener = new_listener(value);

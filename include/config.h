@@ -34,6 +34,7 @@ struct evdns_base* dns;
 struct config {
   struct listener* listeners;
   char* dateformat;
+  unsigned short disconnect_after_bytes;
 };
 
 struct config* config;
