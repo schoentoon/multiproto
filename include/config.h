@@ -25,6 +25,7 @@
 #include <event2/bufferevent.h>
 
 #define STDERR (char*) stderr
+#define STDOUT (char*) stdout
 
 static char* SYSLOG = "syslog";
 

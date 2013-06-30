@@ -69,6 +69,8 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
             FILE* f = NULL;
             if (m->logfile == STDERR)
               f = stderr;
+            else if (m->logfile == STDOUT)
+              f = stdout;
             else
               f = fopen(m->logfile, "a");
             if (f) {
@@ -78,7 +80,7 @@ void preproxy_readcb(struct bufferevent* bev, void* context) {
                 fprintf(f, "%s\n", buf);
                 fflush(f);
               }
-              if (m->logfile != STDERR)
+              if (m->logfile != STDERR && m->logfile != STDOUT)
                 fclose(f);
             }
           }

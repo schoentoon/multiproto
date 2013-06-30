@@ -87,6 +87,8 @@ int parse_config(char* config_file) {
       } else if (listener && module && !module->logfile && strcmp(key, "logfile") == 0) {
         if (strcmp(value, "stderr") == 0)
           module->logfile = STDERR;
+        else if (strcmp(value, "stdout") == 0)
+          module->logfile = STDOUT;
         else if (strcmp(value, "syslog") == 0)
           module->logfile = SYSLOG;
         else {
