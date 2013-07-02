@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 /*
 00000000  30 30 33 66 67 69 74 2d  75 70 6c 6f 61 64 2d 70 003fgit- upload-p
@@ -48,4 +49,10 @@ int matchData(unsigned char* data, size_t length) {
     }
   }
   return 0;
+}
+
+size_t log_reponame(unsigned char* data, size_t length, char* buf, size_t buflen) {
+  data += 20;
+  memcpy(buf, data, length - 20);
+  return strlen(buf);
 }
