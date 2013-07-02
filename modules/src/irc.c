@@ -22,7 +22,29 @@
 int matchData(unsigned char* data, size_t length) {
   char* user = strstr((char*) data, "USER ");
   char u0[65], u1[65], u2[65], u3[65];
-  if (user && sscanf(user, "USER %64s \"%64[^\"]\" \"%64[^\"]\" :%64s\r\n", u0, u1, u2, u3) == 4)
-    return 1;
+  if (user) {
+    if (sscanf(user, "USER %64s \"%64[^\"]\" \"%64[^\"]\" :%64s\r\n", u0, u1, u2, u3) == 4)
+      return 1;
+    else if (sscanf(user, "USER %64s %64s %64s :%64[^\r\n]\r\n", u0, u1, u2, u3) == 4)
+      return 1;
+  }
+  return 0;
+}
+
+size_t log_username(unsigned char* data, size_t length, char* buf, size_t buflen) {
+  char* user = strstr((char*) data, "USER ");
+  if (user && sscanf(user, "USER %64s \"%*[^\"]\" \"%*[^\"]\" :%*[^\r\n]\r\n", buf) == 1)
+    return strlen(buf);
+  return 0;
+}
+
+size_t log_realname(unsigned char* data, size_t length, char* buf, size_t buflen) {
+  char* user = strstr((char*) data, "USER ");
+  if (user) {
+    if (sscanf(user, "USER %*s \"%*[^\"]\" \"%*[^\"]\" :%64[^\r\n]\r\n", buf) == 1)
+      return strlen(buf);
+    else if (sscanf(user, "USER %*s %*s %*s :%64[^\r\n]\r\n", buf) == 1)
+      return strlen(buf);
+  }
   return 0;
 }
