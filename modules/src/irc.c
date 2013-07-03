@@ -21,8 +21,9 @@
 
 int matchData(unsigned char* data, size_t length) {
   char* user = strstr((char*) data, "USER ");
+  char* nick = strstr((char*) data, "NICK ");
   char u0[65], u1[65], u2[65], u3[65];
-  if (user) {
+  if (user && nick) {
     if (sscanf(user, "USER %64s \"%64[^\"]\" \"%64[^\"]\" :%64s\r\n", u0, u1, u2, u3) == 4)
       return 1;
     else if (sscanf(user, "USER %64s %64s %64s :%64[^\r\n]\r\n", u0, u1, u2, u3) == 4)
@@ -45,6 +46,22 @@ size_t log_realname(unsigned char* data, size_t length, char* buf, size_t buflen
       return strlen(buf);
     else if (sscanf(user, "USER %*s %*s %*s :%64[^\r\n]\r\n", buf) == 1)
       return strlen(buf);
+  }
+  return 0;
+}
+
+size_t log_nickname(unsigned char* data, size_t length, char* buf, size_t buflen) {
+  char* nick = strstr((char*) data, "NICK ");
+  if (nick) {
+    memcpy(buf, nick + 5, length - (nick - (char*) data) - 5);
+    size_t i;
+    size_t len = length - (nick - (char*) data);
+    for (i = 0; i < len; i++) {
+      if (buf[i] == '\r' || buf[i] == '\n') {
+        buf[i] = '\0';
+        return strlen(buf);
+      }
+    }
   }
   return 0;
 }
