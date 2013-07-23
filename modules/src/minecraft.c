@@ -37,21 +37,15 @@
  */
 
 int matchData(unsigned char* data, size_t length) {
-  if (length >= 5) {
-    if (data[0] == 0x02
-      && data[1] == 0x3d
-      && data[2] == 0x00
-      && data[3] == 0x0a
-      && data[4] == 0x00) {
+  if (length > 1) {
+    if (data[0] == 0x02) {
       unsigned int i;
       for (i = 5; i < length; i++) {
         if (i % 2 == 1) {
           if (!isalnum(data[i]))
-            return 0;
+            break;
         } else if (data[i] != 0x00)
           return 0;
-        else if (data[i] == 0x00 && (data[i+1] == 0x1d || data[i+1] == 0x0d))
-          break;
       }
       return 1;
     }
